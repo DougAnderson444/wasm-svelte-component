@@ -1,35 +1,39 @@
-*Psst — looking for an app template? Go here --> [sveltejs/template](https://github.com/sveltejs/template)*
+# Rust-Wasm in a Svelte component
 
----
+Powered by [@wasm-tool/rollup-plugin-rust](https://www.npmjs.com/package/@wasm-tool/rollup-plugin-rust), all that you need to do to add a bit of rust into your front end code is require the `Cargo.toml`
 
-# component-template
-
-A base for building shareable Svelte components. Clone it with [degit](https://github.com/Rich-Harris/degit):
-
-```bash
-npx degit sveltejs/component-template my-new-component
-cd my-new-component
-npm install # or yarn
-```
+```js
+// mycode.js
+import wasm from "./path/to/Cargo.toml";
  
-Your component's source code lives in `src/Component.svelte`.
+async function loadWasm() {
+    const exports = await wasm();
+ 
+    // Use functions which were exported from Rust...
+}
+```
 
-You can create a package that exports multiple components by adding them to the `src` directory and editing `src/index.js` to reexport them as named exports.
+In order to be able to import this, we need to add the `@wasm-tool` to the rollup.config file. 
 
-TODO
+Normally this will bundle the Rust code into a wasm file. If we did that, we'd have to copy the .wasm file into the project that consumes this component, which isn't convenient. So  since we want to bundle the whole thing into a svelte component easy for the consumer to use, to bundle everything together in our component's source, we add the `inline` option.
 
-* [ ] some firm opinions about the best way to test components
-* [ ] update `degit` so that it automates some of the setup work
+This `inline` option pastes the base64 wasm code right into the js file. It makes it a bit bigger (33% bigger) but that's the tradeoff for convenience:
 
+```js
+import rustPlugin from "@wasm-tool/rollup-plugin-rust";
+ 
+export default {
+    input: {
+        foo: "Cargo.toml",
+    },
+    plugins: [
+        rustPlugin({
+            inlineWasm: true
+        }),
+    ],
+};
+```
 
-## Setting up
+## Build
 
-* Run `npm init` (or `yarn init`)
-* Replace this README with your own
-
-
-## Consuming components
-
-Your package.json has a `"svelte"` field pointing to `src/index.js`, which allows Svelte apps to import the source code directly, if they are using a bundler plugin like [rollup-plugin-svelte](https://github.com/sveltejs/rollup-plugin-svelte) or [svelte-loader](https://github.com/sveltejs/svelte-loader) (where [`resolve.mainFields`](https://webpack.js.org/configuration/resolve/#resolve-mainfields) in your webpack config includes `"svelte"`). **This is recommended.**
-
-For everyone else, `npm run build` will bundle your component's source code into a plain JavaScript module (`dist/index.mjs`) and a UMD script (`dist/index.js`). This will happen automatically when you publish your component to npm, courtesy of the `prepublishOnly` hook in package.json.
+Put the `rust()` plugin first so it builds the wasm code first and then includes it in the component

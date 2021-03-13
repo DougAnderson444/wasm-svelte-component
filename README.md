@@ -2,6 +2,8 @@
 
 Powered by [@wasm-tool/rollup-plugin-rust](https://www.npmjs.com/package/@wasm-tool/rollup-plugin-rust), all that you need to do to add a bit of rust into your front end code is require the `Cargo.toml`
 
+## Use Rust methods in JS file
+
 ```js
 // mycode.js
 import wasm from "./path/to/Cargo.toml";
@@ -12,6 +14,7 @@ async function loadWasm() {
     // Use functions which were exported from Rust...
 }
 ```
+## Rollup.config.js
 
 In order to be able to import this, we need to add the `@wasm-tool` to the rollup.config file. 
 
